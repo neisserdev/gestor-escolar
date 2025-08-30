@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema Universitario - Benjamm</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+<!-- Header -->
+<header class="header">
+    <div class="container">
+        <div class="logo">
+            <i class="fas fa-university"></i>
+            <h1>Sistema Universitario</h1>
+        </div>
+        <div class="user-info">
+            <i class="fas fa-user"></i>
+            <span>benjammdoleyyy</span>
+            <span class="date-time" id="currentDateTime">2025-08-28 20:13:36</span>
+        </div>
+    </div>
+</header>
+
+<!-- Navigation -->
+<nav class="navigation">
+    <div class="container">
+        <ul class="nav-list">
+            <li><button class="nav-btn active" data-section="facultades">
+                <i class="fas fa-building"></i> Facultades
+            </button></li>
+            <li><button class="nav-btn" data-section="carreras">
+                <i class="fas fa-graduation-cap"></i> Carreras
+            </button></li>
+            <li><button class="nav-btn" data-section="alumnos">
+                <i class="fas fa-user-graduate"></i> Alumnos
+            </button></li>
+            <li><button class="nav-btn" data-section="profesores">
+                <i class="fas fa-chalkboard-teacher"></i> Profesores
+            </button></li>
+            <li><button class="nav-btn" data-section="asignaturas">
+                <i class="fas fa-book"></i> Asignaturas
+            </button></li>
+            <li><button class="nav-btn" data-section="notas">
+                <i class="fas fa-chart-line"></i> Notas
+            </button></li>
+            <li><button class="nav-btn" data-section="asistencias">
+                <i class="fas fa-calendar-check"></i> Asistencias
+            </button></li>
+        </ul>
+    </div>
+</nav>
+
+<!-- Main Content -->
+<main class="main-content">
+    <div class="container">
+        <!-- Loading Spinner -->
+        <div class="loading" id="loading">
+            <i class="fas fa-spinner fa-spin"></i>
+            <span>Cargando...</span>
+        </div>
+
+        <!-- Alert Messages -->
+        <div class="alert" id="alert"></div>
+
+        <!-- Facultades Section -->
+        <section class="content-section active" id="facultades-section">
+            <div class="section-header">
+                <h2><i class="fas fa-building"></i> Gestión de Facultades</h2>
+                <button class="btn btn-primary" onclick="abrirModalFacultad()">
+                    <i class="fas fa-plus"></i> Nueva Facultad
+                </button>
+            </div>
+
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nombre de Facultad</th>
+                        <th>Acciones</th>
+                    </tr>
+                    </thead>
+                    <tbody id="facultades-tbody">
+                    <!-- Data will be loaded here -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Carreras Section -->
+        <section class="content-section" id="carreras-section">
+            <div class="section-header">
+                <h2><i class="fas fa-graduation-cap"></i> Gestión de Carreras</h2>
+                <button class="btn btn-primary" onclick="abrirModalCarrera()">
+                    <i class="fas fa-plus"></i> Nueva Carrera
+                </button>
+            </div>
+
+            <div class="filters">
+                <select id="filtro-facultad-carreras" onchange="filtrarCarrerasPorFacultad()">
+                    <option value="">Todas las Facultades</option>
+                </select>
+            </div>
+
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nombre de Carrera</th>
+                        <th>Facultad</th>
+                        <th>Acciones</th>
+                    </tr>
+                    </thead>
+                    <tbody id="carreras-tbody">
+                    <!-- Data will be loaded here -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Alumnos Section -->
+        <section class="content-section" id="alumnos-section">
+            <div class="section-header">
+                <h2><i class="fas fa-user-graduate"></i> Gestión de Alumnos</h2>
+                <button class="btn btn-primary" onclick="abrirModalAlumno()">
+                    <i class="fas fa-plus"></i> Nuevo Alumno
+                </button>
+            </div>
+
+            <div class="filters">
+                <select id="filtro-carrera-alumnos" onchange="filtrarAlumnosPorCarrera()">
+                    <option value="">Todas las Carreras</option>
+                </select>
+                <input type="text" id="buscar-alumnos" placeholder="Buscar por nombre..." onkeyup="buscarAlumnos()">
+            </div>
+
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nombre Completo</th>
+                        <th>Correo</th>
+                        <th>Fecha Nacimiento</th>
+                        <th>Carrera</th>
+                        <th>Acciones</th>
+                    </tr>
+                    </thead>
+                    <tbody id="alumnos-tbody">
+                    <!-- Data will be loaded here -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Profesores Section -->
+        <section class="content-section" id="profesores-section">
+            <div class="section-header">
+                <h2><i class="fas fa-chalkboard-teacher"></i> Gestión de Profesores</h2>
+                <button class="btn btn-primary" onclick="abrirModalProfesor()">
+                    <i class="fas fa-plus"></i> Nuevo Profesor
+                </button>
+            </div>
+
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nombre Completo</th>
+                        <th>Correo</th>
+                        <th>Fecha Nacimiento</th>
+                        <th>Acciones</th>
+                    </tr>
+                    </thead>
+                    <tbody id="profesores-tbody">
+                    <!-- Data will be loaded here -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Asignaturas Section -->
+        <section class="content-section" id="asignaturas-section">
+            <div class="section-header">
+                <h2><i class="fas fa-book"></i> Gestión de Asignaturas</h2>
+                <button class="btn btn-primary" onclick="abrirModalAsignatura()">
+                    <i class="fas fa-plus"></i> Nueva Asignatura
+                </button>
+            </div>
+
+            <div class="filters">
+                <select id="filtro-carrera-asignaturas" onchange="filtrarAsignaturasPorCarrera()">
+                    <option value="">Todas las Carreras</option>
+                </select>
+            </div>
+
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nombre de Asignatura</th>
+                        <th>Carrera</th>
+                        <th>Acciones</th>
+                    </tr>
+                    </thead>
+                    <tbody id="asignaturas-tbody">
+                    <!-- Data will be loaded here -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Notas Section -->
+        <section class="content-section" id="notas-section">
+            <div class="section-header">
+                <h2><i class="fas fa-chart-line"></i> Gestión de Notas</h2>
+                <button class="btn btn-primary" onclick="abrirModalNota()">
+                    <i class="fas fa-plus"></i> Nueva Nota
+                </button>
+            </div>
+
+            <div class="filters">
+                <select id="filtro-alumno-notas" onchange="filtrarNotasPorAlumno()">
+                    <option value="">Todos los Alumnos</option>
+                </select>
+                <select id="filtro-asignatura-notas" onchange="filtrarNotasPorAsignatura()">
+                    <option value="">Todas las Asignaturas</option>
+                </select>
+            </div>
+
+            <div class="stats-cards">
+                <div class="stat-card">
+                    <i class="fas fa-calculator"></i>
+                    <div>
+                        <h3>Promedio General</h3>
+                        <span id="promedio-general">--</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Alumno</th>
+                        <th>Asignatura</th>
+                        <th>Profesor</th>
+                        <th>Valor</th>
+                        <th>Tipo</th>
+                        <th>Fecha</th>
+                        <th>Acciones</th>
+                    </tr>
+                    </thead>
+                    <tbody id="notas-tbody">
+                    <!-- Data will be loaded here -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Asistencias Section -->
+        <section class="content-section" id="asistencias-section">
+            <div class="section-header">
+                <h2><i class="fas fa-calendar-check"></i> Gestión de Asistencias</h2>
+                <button class="btn btn-primary" onclick="abrirModalAsistencia()">
+                    <i class="fas fa-plus"></i> Nueva Asistencia
+                </button>
+            </div>
+
+            <div class="filters">
+                <select id="filtro-alumno-asistencias" onchange="filtrarAsistenciasPorAlumno()">
+                    <option value="">Todos los Alumnos</option>
+                </select>
+                <select id="filtro-asignatura-asistencias" onchange="filtrarAsistenciasPorAsignatura()">
+                    <option value="">Todas las Asignaturas</option>
+                </select>
+            </div>
+
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Alumno</th>
+                        <th>Asignatura</th>
+                        <th>Fecha</th>
+                        <th>Estado</th>
+                        <th>Acciones</th>
+                    </tr>
+                    </thead>
+                    <tbody id="asistencias-tbody">
+                    <!-- Data will be loaded here -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+</main>
+
+<!-- Modal Container -->
+<div class="modal-overlay" id="modal-overlay">
+    <div class="modal" id="modal">
+        <div class="modal-header">
+            <h3 id="modal-title">Título del Modal</h3>
+            <button class="modal-close" onclick="cerrarModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body" id="modal-body">
+            <!-- Modal content will be loaded here -->
+        </div>
+    </div>
+</div>
+
+<!-- Scripts -->
+<script src="js/api.js"></script>
+<script src="js/components/facultades.js"></script>
+<script src="js/components/carreras.js"></script>
+<script src="js/components/alumnos.js"></script>
+<script src="js/components/profesores.js"></script>
+<script src="js/components/asignaturas.js"></script>
+<script src="js/components/notas.js"></script>
+<script src="js/components/asistencias.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
