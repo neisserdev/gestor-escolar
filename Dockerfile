@@ -1,5 +1,5 @@
-# Etapa 1: Construcción con Maven + JDK 17
-FROM maven:3.9.9-eclipse-temurin-17 AS builder
+# Etapa 1: Construcción con Maven + JDK 21
+FROM maven:3.9.9-eclipse-temurin-21 AS builder
 WORKDIR /app
 
 # Copia pom.xml primero para cachear dependencias
@@ -12,21 +12,15 @@ COPY src ./src
 # Compila el proyecto sin ejecutar tests
 RUN mvn clean package -DskipTests
 
-# Etapa 2: Ejecución con JRE 17
-FROM eclipse-temurin:17-jre-jammy
+# Etapa 2: Ejecución con JRE 21
+FROM eclipse-temurin:21-jre-jammy
 WORKDIR /app
-
-# Instala curl para health checks (útil en Render)
-RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
 
 # Copia el JAR compilado desde la etapa builder
 COPY --from=builder /app/target/*.jar app.jar
 
-# Puerto que Render asignará dinámicamente
+# Puerto estándar para aplicaciones Spring Boot
 EXPOSE 8080
 
-# Variables de entorno para optimización en producción
-ENV JAVA_OPTS="-Xmx512m -Xms256m -Djava.security.egd=file:/dev/./urandom"
-
-# Comando de ejecución optimizado para Render
-ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -Dserver.port=$PORT -jar app.jar"]
+# Comando de ejecución
+ENTRYPOINT ["java", "-jar", "app.jar"]

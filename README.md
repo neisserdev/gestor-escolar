@@ -1,15 +1,17 @@
-# 🏫 Gestor Escolar
+# 🗂️ Sistema de Gestión de Tareas
 
-Sistema web desarrollado con Spring Boot 3.5.4 para la gestión escolar con soporte para MySQL y PostgreSQL.
+API REST desarrollada con **Spring Boot 4** (v4.0.5) para la gestión de tareas con PostgreSQL, validación, paginación y documentación OpenAPI.
 
 ## 🛠️ Tecnologías
 
-- **Java 17** + **Spring Boot 3.5.4**
+- **Java 17** + **Spring Boot 4**
 - **Spring Data JPA** - Persistencia de datos
-- **Spring Boot Validation** - Validación de datos
-- **Spring Boot Actuator** - Monitoreo y métricas
-- **SpringDoc OpenAPI** - Documentación de API
-- **MySQL / PostgreSQL** - Base de datos
+- **PostgreSQL** - Base de datos
+- **Spring Validation** - Validación de requests
+- **Spring Cache + Caffeine** - Cacheo de respuestas GET
+- **Springdoc OpenAPI (Swagger UI)** - Documentación de la API
+- **Spring Boot Actuator** - Endpoints de monitoreo
+- **MapStruct** - Mapeo Entity ⇄ DTO
 - **Maven** - Gestión de dependencias
 - **Lombok** - Reducción de código
 - **Docker** - Containerización
@@ -18,111 +20,165 @@ Sistema web desarrollado con Spring Boot 3.5.4 para la gestión escolar con sopo
 
 - Java 17+
 - Maven 3.6+
-- MySQL 8.0+ o PostgreSQL 12+
+- PostgreSQL 12+
 
 ## 🗄️ Configuración de Base de Datos Local
 
-### Opción 1: MySQL
+### PostgreSQL
 
-1. **Instalar y configurar MySQL:**
-
-```sql
--- Crear base de datos
-CREATE DATABASE gestor_escolar;
-
--- Crear usuario
-CREATE USER 'gestor_user'@'localhost' IDENTIFIED BY 'gestor123';
-GRANT ALL PRIVILEGES ON gestor_escolar.* TO 'gestor_user'@'localhost';
-FLUSH PRIVILEGES;
-```
-
-2. **Configurar application-local.properties:**
-
-```properties
-spring.application.name=gestor-escolar
-server.port=8080
-
-# MySQL Local
-spring.datasource.url=jdbc:mysql://localhost:3306/gestor_escolar
-spring.datasource.username=gestor_user
-spring.datasource.password=gestor123
-spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
-
-spring.jpa.hibernate.ddl-auto=update
-spring.jpa.show-sql=true
-spring.jpa.database-platform=org.hibernate.dialect.MySQL8Dialect
-```
-
-### Opción 2: PostgreSQL
-
-1. **Instalar y configurar PostgreSQL:**
-
+**1. Instalar y configurar PostgreSQL:**
 ```bash
 # Conectar a PostgreSQL
 sudo -u postgres psql
 
 # En PostgreSQL:
-CREATE DATABASE gestor_escolar;
-CREATE USER gestor_user WITH PASSWORD 'gestor123';
-GRANT ALL PRIVILEGES ON DATABASE gestor_escolar TO gestor_user;
+CREATE DATABASE gestion_tareas;
+CREATE USER gestion_user WITH PASSWORD 'gestion123';
+GRANT ALL PRIVILEGES ON DATABASE gestion_tareas TO gestion_user;
 ```
 
-2. **Configurar application-local.properties:**
-
+**2. Configurar [src/main/resources/application.properties](src/main/resources/application.properties):**
 ```properties
-spring.application.name=gestor-escolar
-server.port=8080
-
-# PostgreSQL Local
-spring.datasource.url=jdbc:postgresql://localhost:5432/gestor_escolar
-spring.datasource.username=gestor_user
-spring.datasource.password=gestor123
-spring.datasource.driver-class-name=org.postgresql.Driver
-
+spring.datasource.url=jdbc:postgresql://localhost:5432/gestion_tareas
+spring.datasource.username=gestion_user
+spring.datasource.password=gestion123
 spring.jpa.hibernate.ddl-auto=update
-spring.jpa.show-sql=true
-spring.jpa.database-platform=org.hibernate.dialect.PostgreSQLDialect
 ```
+
+Nota: en este repo el ejemplo por defecto usa `dbtareas` y credenciales de desarrollo. Ajusta estos valores a tu entorno.
+
+## 📚 Documentación (Swagger / OpenAPI)
+
+- Swagger UI: `http://localhost:8080/swagger-ui/index.html`
+- OpenAPI JSON: `http://localhost:8080/v3/api-docs`
+
+## 🔌 Endpoints de la API
+
+Base URL: `http://localhost:8080/api/tareas`
+
+### Listar tareas (paginado)
+
+`GET /api/tareas`
+
+Parámetros de paginación (Spring `Pageable`):
+- `page` (0-based, default 0)
+- `size` (default 20)
+- `sort` (ej: `sort=fechaCreacion,desc`)
+
+Respuesta (`200 OK`) envuelta en `PaginaResponseDTO`:
+```json
+{
+	"datos": [
+		{
+			"id": 1,
+			"titulo": "Comprar pan",
+			"descripcion": "En la tarde",
+			"fechaCreacion": "2026-04-12",
+			"fechaActualizacion": "2026-04-12",
+			"completada": false
+		}
+	],
+	"pagina": 0,
+	"tamano": 20,
+	"totalElementos": 1,
+	"totalPaginas": 1
+}
+```
+
+### Obtener tarea por ID
+
+`GET /api/tareas/{id}` → `200 OK`
+
+Si no existe → `404 Not Found` (ver formato de error abajo).
+
+### Crear tarea
+
+`POST /api/tareas` → `201 Created`
+
+Body (`TareaRequestDTO`):
+```json
+{
+	"titulo": "Comprar pan",
+	"descripcion": "En la tarde"
+}
+```
+
+Validaciones:
+- `titulo`: obligatorio, máximo 100 caracteres
+- `descripcion`: opcional, máximo 255 caracteres
+
+### Actualizar tarea
+
+`PUT /api/tareas/{id}` → `200 OK`
+
+Body: igual a creación.
+
+### Marcar como completada
+
+`PATCH /api/tareas/{id}` → `200 OK`
+
+Marca `completada=true` y devuelve la tarea actualizada.
+
+### Eliminar tarea
+
+`DELETE /api/tareas/{id}` → `204 No Content`
+
+## ⚠️ Formato de errores
+
+La API expone errores con `ProblemDetail`.
+
+### Validación
+
+En errores de validación, la API sigue el estándar **RFC 9457 (Problem Details for HTTP APIs)**: define el “contrato” (estructura) de cómo debe verse un error HTTP en formato JSON.
+
+En Spring Boot, esto se materializa con **`ProblemDetail`**, que es la clase utilizada para representar y devolver esos errores de forma consistente en toda la API.
+
+`400 Bad Request` (ejemplo):
+```json
+{
+	"type": "about:blank",
+	"title": "Error de validación",
+	"status": 400,
+	"detail": "La solicitud contiene campos inválidos. Revise el detalle de errores.",
+	"instance": "/api/tareas",
+	"timestamp": "2026-04-12T00:00:00Z",
+	"errors": {
+		"titulo": "El título es obligatorio"
+	},
+	"errorCount": 1
+}
+```
+
+### Recurso no encontrado
+
+`404 Not Found` (ejemplo):
+```json
+{
+	"type": "about:blank",
+	"title": "Tarea no encontrada",
+	"status": 404,
+	"detail": "Tarea no encontrada con ID: 123",
+	"instance": "/api/tareas/123",
+	"timestamp": "2026-04-12T00:00:00Z"
+}
+```
+
 
 ## 🚀 Ejecutar la Aplicación
 
 ```bash
-# Clonar proyecto
-git clone https://github.com/neisserdev/gestor-escolar.git
-cd gestor-escolar
-
-# Ejecutar con perfil local
-./mvnw spring-boot:run -Dspring-boot.run.profiles=local
+# Ejecutar (Linux/macOS)
+./mvnw spring-boot:run
 
 # O en Windows
-mvnw.cmd spring-boot:run -Dspring-boot.run.profiles=local
-```
-
-## 📚 Documentación de API
-
-Una vez que la aplicación esté ejecutándose, puedes acceder a la documentación de la API en:
-
-- **Swagger UI**: http://localhost:8080/swagger-ui.html
-- **OpenAPI JSON**: http://localhost:8080/v3/api-docs
-
-## 🐳 Docker
-
-El proyecto incluye un Dockerfile para facilitar el despliegue:
-
-```bash
-# Construir imagen
-docker build -t gestor-escolar .
-
-# Ejecutar contenedor
-docker run -p 8080:8080 gestor-escolar
+mvnw.cmd spring-boot:run
 ```
 
 ## 📝 Notas
 
 - Las tablas se crean automáticamente con `hibernate.ddl-auto=update`
-- Usa el perfil `local` para desarrollo
-- El perfil por defecto usa la configuración de producción
-- Spring Boot Actuator proporciona endpoints de monitoreo en `/actuator`
+- La paginación usa `page` (base 0), `size` y `sort`
+- Los `GET` están cacheados (Caffeine) según la configuración de `spring.cache.*`
 
 ## 👨‍💻 Autor
 
